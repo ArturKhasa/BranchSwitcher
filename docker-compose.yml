@@ -7,3 +7,4 @@
        - "8080:8080"
      volumes:
        - ${HOST_REPO_PATH}:/app/repo
+       - ~/.ssh:/root/.ssh:ro
