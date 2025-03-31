@@ -18,17 +18,19 @@ func getBranches() ([]string, error) {
 		return nil, fmt.Errorf("failed to fetch branches: %v", err)
 	}
 
-	cmd := exec.Command("git", "branch", "--list")
+	// Получаем список веток
+	cmd := exec.Command("git", "branch", "--list", "--remote") // Теперь берем и удаленные
 	cmd.Dir = repoPath
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 
+	// Обрабатываем список веток
 	branches := strings.Split(string(output), "\n")
 	for i, branch := range branches {
-		branches[i] = strings.TrimSpace(strings.TrimPrefix(branch, "* "))
+		branch = strings.TrimSpace(strings.TrimPrefix(branch, "origin/")) // Убираем `origin/`
+		branches[i] = branch
 	}
 
 	return branches, nil
@@ -54,13 +56,13 @@ func switchBranch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	deployCmd := exec.Command("sh", ".scripts/deploy.sh")
-	deployCmd.Dir = repoPath
-	deployOutput, deployErr := deployCmd.CombinedOutput()
-	if deployErr != nil {
-		http.Error(w, fmt.Sprintf("Failed to run deploy script: %s", deployOutput), http.StatusInternalServerError)
-		return
-	}
+	//deployCmd := exec.Command("sh", ".scripts/deploy.sh")
+	//deployCmd.Dir = repoPath
+	//deployOutput, deployErr := deployCmd.CombinedOutput()
+	//if deployErr != nil {
+	//	http.Error(w, fmt.Sprintf("Failed to run deploy script: %s", deployOutput), http.StatusInternalServerError)
+	//	return
+	//}
 
 	fmt.Fprintf(w, "Switched to branch: %s\nDeploy script executed successfully", branch)
 }

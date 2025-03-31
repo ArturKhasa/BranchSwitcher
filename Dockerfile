@@ -19,6 +19,8 @@ FROM debian:bullseye-slim
 COPY --from=builder /app/main /app/main
 
 WORKDIR /app
-RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y git openssh-client && \
+    mkdir -p /root/.ssh && chmod 700 /root/.ssh && \
+    ssh-keyscan github.com > /root/.ssh/known_hosts
 
 CMD ["./main"]

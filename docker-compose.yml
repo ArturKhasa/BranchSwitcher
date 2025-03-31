@@ -8,3 +8,5 @@
      volumes:
        - ${HOST_REPO_PATH}:/app/repo
        - ~/.ssh:/root/.ssh:ro
+     environment:
+       - GIT_SSH_COMMAND=ssh -o StrictHostKeyChecking=no
