@@ -12,7 +12,7 @@ const repoPath = "./repo" // Укажите путь к репозиторию
 
 func getBranches() ([]string, error) {
 	// Выполняем `git fetch`, чтобы обновить список веток
-	fetchCmd := exec.Command("git", "fetch", "--prune")
+	fetchCmd := exec.Command("git", "fetch", "--all")
 	fetchCmd.Dir = repoPath
 	if err := fetchCmd.Run(); err != nil {
 		return nil, fmt.Errorf("failed to fetch branches: %v", err)
@@ -26,11 +26,25 @@ func getBranches() ([]string, error) {
 		return nil, err
 	}
 
+	// Получаем текущую ветку
+	cmd = exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
+	cmd.Dir = repoPath
+	currentBranchBytes, err := cmd.Output()
+	if err != nil {
+		return nil, err
+	}
+
+	currentBranch := strings.TrimSpace(string(currentBranchBytes))
+
 	// Обрабатываем список веток
 	branches := strings.Split(string(output), "\n")
 	for i, branch := range branches {
-		branch = strings.TrimSpace(strings.TrimPrefix(branch, "origin/")) // Убираем `origin/`
-		branches[i] = branch
+		branch = strings.TrimPrefix(strings.TrimSpace(branch), "origin/")
+		if branch == currentBranch {
+			branches[0] = branch
+		} else {
+			branches[i] = branch
+		}
 	}
 
 	return branches, nil
@@ -56,13 +70,13 @@ func switchBranch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//deployCmd := exec.Command("sh", ".scripts/deploy.sh")
-	//deployCmd.Dir = repoPath
-	//deployOutput, deployErr := deployCmd.CombinedOutput()
-	//if deployErr != nil {
-	//	http.Error(w, fmt.Sprintf("Failed to run deploy script: %s", deployOutput), http.StatusInternalServerError)
-	//	return
-	//}
+	cmdPull := exec.Command("git", "pull", "origin", branch)
+	cmdPull.Dir = repoPath
+	output, err = cmdPull.CombinedOutput()
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to pull branch: %s", output), http.StatusInternalServerError)
+		return
+	}
 
 	fmt.Fprintf(w, "Switched to branch: %s\nDeploy script executed successfully", branch)
 }
