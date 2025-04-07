@@ -40,10 +40,20 @@ func getBranches() ([]string, error) {
 	branches := strings.Split(string(output), "\n")
 	for i, branch := range branches {
 		branch = strings.TrimPrefix(strings.TrimSpace(branch), "origin/")
+
+		// Получаем автора последнего коммита
+		authorCmd := exec.Command("git", "log", "-1", "--pretty=format:%an", "origin/"+branch)
+		authorCmd.Dir = repoPath
+		authorOutput, err := authorCmd.Output()
+		author := ""
+		if err == nil {
+			author = string(authorOutput)
+		}
+
 		if branch == currentBranch {
-			branches[0] = branch
+			branches[0] = branch + "(" + author + ")"
 		} else {
-			branches[i] = branch
+			branches[i] = branch + "(" + author + ")"
 		}
 	}
 
