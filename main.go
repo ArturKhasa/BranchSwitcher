@@ -72,6 +72,12 @@ func switchBranch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	idx := strings.Index(branch, "(")
+
+	if idx != -1 {
+		branch = branch[:idx] // Обрежем строку до символа '('
+	}
+
 	cmd := exec.Command("git", "checkout", branch)
 	cmd.Dir = repoPath
 	output, err := cmd.CombinedOutput()
